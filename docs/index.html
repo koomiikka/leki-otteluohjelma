@@ -7,7 +7,7 @@
 <title>LeKi-turnaukset kalenteriin</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
 <style>
-/* Layout: neljä vaihetta allekkain (valitse, turnaukset kortteina, lisää kaikki, esimerkki); kapea yksi palsta */
+/* Layout: neljä vaihetta allekkain (valitse, turnaukset taulukkona, lisää kaikki, esimerkki); kapea yksi palsta */
 :root {
   --bg: #f3f6fa; --surface: #ffffff; --fg: #14213a; --muted: #5b6780; --line: #d9e0ea;
   --accent: #1447a8; --accent-fg: #ffffff; --home: #c2410c; --home-bg: #fdebe1; --soft: #e8eef8;
@@ -57,20 +57,29 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 button:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .status { font-size: .9rem; color: var(--muted); }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
-.card.home { border: 2px solid var(--home); background: linear-gradient(var(--home-bg), var(--surface) 70px); }
-.card .who { font-size: .85rem; font-weight: 600; color: var(--muted); overflow-wrap: anywhere; }
-.card header { display: flex; justify-content: space-between; gap: 12px; align-items: start; }
-.card h3 { font-family: var(--display); font-size: 1.25rem; line-height: 1.1; margin: 0; }
-.card header p { color: var(--muted); font-size: .9rem; }
-.win { text-align: right; font-family: var(--display); font-weight: 700; font-size: 1.15rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.win span { display: block; font-family: var(--body); font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.card li { display: grid; grid-template-columns: 3.2em 1fr; column-gap: 8px; font-size: .92rem; }
-.card li .muted { grid-column: 2; font-size: .8rem; }
-.card li .t { font-weight: 600; font-variant-numeric: tabular-nums; }
-.card a { color: var(--accent); font-weight: 600; font-size: .85rem; justify-self: start; }
+.tablebox { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td.d, td.t { font-variant-numeric: tabular-nums; white-space: nowrap; }
+td.t { font-family: var(--display); font-size: 1.15rem; font-weight: 700; }
+td.t .muted { font-family: var(--body); font-size: .75rem; font-weight: 400; display: block; }
+tr.home td:first-child { box-shadow: inset 4px 0 0 var(--home); }
+tr.home { background: var(--home-bg); }
+td a { color: var(--accent); font-weight: 600; font-size: .85rem; white-space: nowrap; }
+/* Puhelin: rivi kahdelle riville, ei sivuttaisvieritystä */
+@media (max-width: 640px) {
+  thead { display: none; }
+  tr { display: grid; grid-template-columns: 1fr auto; gap: 0 12px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  tr:last-child { border-bottom: 0; }
+  td { padding: 0; border: 0; }
+  tr.home { box-shadow: inset 4px 0 0 var(--home); }
+  tr.home td:first-child { box-shadow: none; }
+  td.who { grid-column: 1 / -1; order: -1; font-weight: 600; overflow-wrap: anywhere; }
+  td.t { text-align: right; }
+  td.where { color: var(--muted); font-size: .9rem; }
+}
 details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
 details summary { cursor: pointer; font-weight: 600; }
 details ol { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 4px; }
@@ -109,7 +118,7 @@ details ol { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 4px; }
       <ol>
         <li><b>iPhone ja iPad:</b> paina Lisää kalenteriin ja valitse <b>Lisää kaikki</b>. Jos puhelin lataa tiedoston, avaa se Lataukset-kansiosta.</li>
         <li><b>Mac ja Windows (Outlook, Kalenteri):</b> avaa ladattu tiedosto, niin merkinnät tuodaan kalenteriin.</li>
-        <li><b>Google-kalenteri:</b> tietokoneella calendar.google.com → Asetukset → <b>Tuo ja vie</b> → valitse tiedosto. Android-puhelimessa käytä turnauskorttien Google-linkkejä.</li>
+        <li><b>Google-kalenteri:</b> tietokoneella calendar.google.com → Asetukset → <b>Tuo ja vie</b> → valitse tiedosto. Android-puhelimessa käytä turnauslistan Google-linkkejä.</li>
       </ol>
       <p class="small muted" style="margin-top:8px">Merkinnöissä on muistutus tuntia ennen, talkoissa edellisenä päivänä klo 16. Jos tuot tiedoston uudelleen, samat merkinnät voivat tulla kalenteriin kahteen kertaan.</p>
     </details>
@@ -121,7 +130,7 @@ details ol { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 4px; }
         <li>Valitse ladattu tiedosto ja kalenteri, johon merkinnät lisätään, ja paina Tuo.</li>
         <li>Muistutukset eivät siirry tiedoston mukana. Kalenterin oletusmuistutus on käytössä.</li>
       </ol>
-      <p class="small muted" style="margin-top:8px">Outlook: Tiedosto → Avaa ja vie → Tuo/Vie → CSV-tiedosto. iPhone-kalenteri ei tuo CSV-tiedostoa; lisää merkinnät turnauskorttien linkeistä tai Google-kalenterin kautta.</p>
+      <p class="small muted" style="margin-top:8px">Outlook: Tiedosto → Avaa ja vie → Tuo/Vie → CSV-tiedosto. iPhone-kalenteri ei tuo CSV-tiedostoa; lisää merkinnät turnauslistan linkeistä tai Google-kalenterin kautta.</p>
     </details>
   </section>
 
@@ -281,26 +290,19 @@ function renderOutput() {
       el("pre", { textContent: e.description })),
     el("div", { className: "pager", style: "margin-top:10px" }, back, fwd,
       el("span", { className: "small muted", textContent: `Merkintä ${previewIndex + 1} / ${events.length}` })));
-  list.replaceChildren(el("div", { className: "cards" }, ...events.map(card)));
+  list.replaceChildren(el("div", { className: "tablebox" }, el("table", {},
+    el("thead", {}, el("tr", {}, ...["Päivä", "Merkintä", "Paikalla", "Paikka", ""].map(h => el("th", { textContent: h })))),
+    el("tbody", {}, ...events.map(row)))));
 }
 
-// LeKin joukkue lihavoituna; useamman joukkueen päivänä ottelut aikajärjestyksessä joukkueen nimen kera
-function card(ev) {
-  const multi = ev.sections.length > 1;
-  const ms = ev.sections.flatMap(([team, m]) => m.map(x => [...x, team])).sort((a, b) => a[0].localeCompare(b[0]));
-  const side = n => n.startsWith("LeKi") ? el("b", { textContent: n }) : n;
-  const win = ev.allDay ? ["Ottelut", ev.games] : ["Paikalla", `${ev.start.replace(":", ".")}–${ev.end.replace(":", ".")}`];
-  return el("article", { className: "card" + (ev.home ? " home" : "") },
-    el("div", { className: "who", textContent: ev.title }),
-    el("header", {},
-      el("div", {}, el("h3", { textContent: fdate(ev.date) }), el("p", { textContent: `${ev.venue}, ${ev.city}` })),
-      el("div", { className: "win" }, el("span", { textContent: win[0] }), win[1].replaceAll(":", "."))),
-    el("ul", {}, ...ms.map(([h, a, b, team]) => el("li", {},
-      el("span", { className: "t", textContent: h }),
-      el("span", {}, side(a), " – ", side(b)),
-      multi ? el("span", { className: "muted", textContent: team.replace(/^LeKi /, "") }) : null))),
-    el("p", { className: "muted small", textContent: `Järjestäjä: ${ev.host}` }),
-    el("a", { href: googleLink(ev), target: "_blank", rel: "noopener", textContent: "Lisää Google-kalenteriin" }));
+function row(ev) {
+  const time = ev.allDay ? [ev.games.replaceAll(":", "."), "ottelut"] : [`${ev.start.replace(":", ".")}–${ev.end.replace(":", ".")}`, null];
+  return el("tr", { className: ev.home ? "home" : "" },
+    el("td", { className: "d", textContent: fdate(ev.date) }),
+    el("td", { className: "who", textContent: ev.title }),
+    el("td", { className: "t" }, time[0], time[1] ? el("span", { className: "muted", textContent: time[1] }) : null),
+    el("td", { className: "where" }, `${ev.venue}, ${ev.city}`),
+    el("td", {}, el("a", { href: googleLink(ev), target: "_blank", rel: "noopener", textContent: "Google-kalenteriin" })));
 }
 
 function renderAll() { renderTeams(); renderOutput(); }
