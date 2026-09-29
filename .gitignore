@@ -1,0 +1,5 @@
+# Julkinen repo (GitHub Pages): vain docs/ julkaistaan.
+# Muut tiedostot sisältävät perheen tietoja (nimet, kalenteritunnisteet) eivätkä kuulu repoon.
+/*
+!/.gitignore
+!/docs/

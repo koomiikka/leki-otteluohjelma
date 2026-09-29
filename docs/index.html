@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="fi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}</style>
+<title>LeKi-turnaukset kalenteriin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: kolme vaihetta allekkain (valitse, esikatsele, lisää); kapea yksi palsta */
+:root {
+  --bg: #f3f6fa; --surface: #ffffff; --fg: #14213a; --muted: #5b6780; --line: #d9e0ea;
+  --accent: #1447a8; --accent-fg: #ffffff; --home: #c2410c; --home-bg: #fdebe1; --soft: #e8eef8;
+  --display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1522; --surface: #162033; --fg: #e6ecf5; --muted: #95a3bb; --line: #26324a;
+  --accent: #7aa7ff; --accent-fg: #0e1522; --home: #fb923c; --home-bg: #3a2416; --soft: #1c2940; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e1522; --surface: #162033; --fg: #e6ecf5; --muted: #95a3bb; --line: #26324a;
+  --accent: #7aa7ff; --accent-fg: #0e1522; --home: #fb923c; --home-bg: #3a2416; --soft: #1c2940; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--body); }
+.wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; display: grid; gap: 32px; }
+h1, h2 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap: balance; text-transform: uppercase; }
+h1 { font-size: 2.5rem; letter-spacing: .01em; }
+h2 { font-size: 1.5rem; letter-spacing: .02em; display: flex; gap: 10px; align-items: baseline; }
+h2 .step { color: var(--accent); }
+p { margin: 0; max-width: 65ch; }
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+section { display: grid; gap: 14px; }
+.teams { display: grid; gap: 10px; }
+.team { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 10px; }
+.team.on { border-color: var(--accent); }
+.team-head { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; }
+.team-head b { font-size: 1.05rem; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg label { position: relative; }
+.seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.seg span { display: block; padding: 6px 12px; font-size: .88rem; font-weight: 600; color: var(--muted); cursor: pointer; }
+.seg label + label span { border-left: 1px solid var(--line); }
+.seg input:checked + span { background: var(--accent); color: var(--accent-fg); }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
+.name-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.name-row input { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); min-width: 0; flex: 1 1 200px; max-width: 320px; }
+.name-row input:focus-visible { outline: 2px solid var(--accent); border-color: var(--accent); }
+.preview { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.preview .bar { padding: 12px 16px; background: var(--soft); display: grid; gap: 2px; }
+.preview .bar.home { background: var(--home-bg); box-shadow: inset 4px 0 0 var(--home); }
+.preview .title { font-weight: 600; font-size: 1.1rem; }
+.preview pre { margin: 0; padding: 14px 16px; font: .9rem/1.55 var(--body); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pager { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+button, .btn { font: inherit; font-weight: 600; border-radius: 8px; padding: 8px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; text-decoration: none; display: inline-block; }
+button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); font-size: 1rem; padding: 10px 18px; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.status { font-size: .9rem; color: var(--muted); }
+.list { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.list li { display: grid; grid-template-columns: 7.5em 1fr auto; gap: 4px 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); align-items: center; }
+.list li:last-child { border-bottom: 0; }
+.list .d { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--muted); font-size: .9rem; }
+.list .t { min-width: 0; overflow-wrap: anywhere; }
+.list a { color: var(--accent); font-weight: 600; font-size: .85rem; white-space: nowrap; }
+@media (max-width: 560px) { .list li { grid-template-columns: 1fr auto; } .list .d { grid-column: 1 / -1; } }
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+details summary { cursor: pointer; font-weight: 600; }
+details ol { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.empty { padding: 16px; color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: 10px; }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <h1>LeKi-turnaukset kalenteriin</h1>
+    <p class="muted">Salibandy 2026–27. Valitse joukkue, lisää halutessasi pelaajan nimi ja siirrä turnaukset omaan kalenteriisi. Kotiturnaukset on merkitty talolla 🏠, koska niihin liittyy talkoita. Tiedot: tulospalvelu.salibandy.fi, päivitetty <span id="updated"></span>.</p>
+  </header>
+
+  <section aria-labelledby="h-teams">
+    <h2 id="h-teams"><span class="step">1</span> Valitse joukkueet</h2>
+    <p class="small muted"><b>Pelit</b> = joukkueen turnaukset, paikalla tunti ennen ensimmäistä ottelua (U10 puoli tuntia viimeisen ottelun alun jälkeen, muut tunnin). <b>Vain talkoot</b> = pelkät LeKin kotiturnauspäivät koko päivän merkintöinä.</p>
+    <div class="teams" id="teams"></div>
+  </section>
+
+  <section aria-labelledby="h-preview">
+    <h2 id="h-preview"><span class="step">2</span> Esimerkkimerkintä</h2>
+    <div id="preview"></div>
+  </section>
+
+  <section aria-labelledby="h-add">
+    <h2 id="h-add"><span class="step">3</span> Lisää kalenteriin</h2>
+    <div class="actions">
+      <button class="primary" id="ics" type="button" hidden>Lisää kalenteriin</button>
+      <button class="primary" id="download" type="button" hidden>Lataa kalenteritiedosto (CSV)</button>
+      <button id="copy" type="button" hidden>Kopioi CSV leikepöydälle</button>
+      <span class="status" id="status" role="status"></span>
+    </div>
+    <details id="help-ics" hidden>
+      <summary>Näin merkinnät siirtyvät kalenteriin</summary>
+      <ol>
+        <li><b>iPhone ja iPad:</b> paina Lisää kalenteriin ja valitse <b>Lisää kaikki</b>. Jos puhelin lataa tiedoston, avaa se Lataukset-kansiosta.</li>
+        <li><b>Mac ja Windows (Outlook, Kalenteri):</b> avaa ladattu tiedosto, niin merkinnät tuodaan kalenteriin.</li>
+        <li><b>Google-kalenteri:</b> tietokoneella calendar.google.com → Asetukset → <b>Tuo ja vie</b> → valitse tiedosto. Android-puhelimessa käytä alla olevia Google-linkkejä.</li>
+      </ol>
+      <p class="small muted" style="margin-top:8px">Merkinnöissä on muistutus tuntia ennen, talkoissa edellisenä päivänä klo 16. Jos tuot tiedoston uudelleen, samat merkinnät voivat tulla kalenteriin kahteen kertaan.</p>
+    </details>
+    <details id="help-csv" hidden>
+      <summary>Näin tuot tiedoston Google-kalenteriin</summary>
+      <ol>
+        <li>Avaa Google-kalenteri tietokoneella: calendar.google.com.</li>
+        <li>Asetukset (ratas) → <b>Tuo ja vie</b> → <b>Tuo</b>.</li>
+        <li>Valitse ladattu tiedosto ja kalenteri, johon merkinnät lisätään, ja paina Tuo.</li>
+        <li>Muistutukset eivät siirry tiedoston mukana. Kalenterin oletusmuistutus on käytössä.</li>
+      </ol>
+      <p class="small muted" style="margin-top:8px">Outlook: Tiedosto → Avaa ja vie → Tuo/Vie → CSV-tiedosto. iPhone-kalenteri ei tuo CSV-tiedostoa; lisää merkinnät alla olevista linkeistä tai Google-kalenterin kautta.</p>
+    </details>
+    <p class="small muted">Tai lisää merkinnät yksitellen Google-kalenteriin:</p>
+    <div id="list"></div>
+  </section>
+</div>
+
+<script>
+const DATA = {"updated": "2026-09-29", "teams": [{"id": "u10t", "label": "LeKi U10 Tytöt", "cat": "U10-8 TYTÖT SS", "url": "https://tulospalvelu.salibandy.fi/category/954!sb2026ss/group/1/fixtures", "games": [{"date": "2026-10-03", "start": "09:00", "end": "12:30", "venue": "Harjuniityn liikuntahalli", "city": "Nokia", "host": "NoPS Keltainen", "home": false, "sections": [["LeKi", [["10:00", "NoPS Keltainen", "LeKi"], ["11:20", "LeKi", "Y-Ilves Valkoinen"], ["12:00", "Classic Sininen", "LeKi"]]]]}, {"date": "2026-10-18", "start": "09:00", "end": "16:30", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi", "home": true, "sections": [["LeKi", [["10:00", "LeKi", "Classic Sininen"], ["13:20", "LeKi", "Y-Ilves Punainen"], ["16:00", "LeKi", "NoPS Keltainen"]]]]}, {"date": "2026-11-01", "start": "10:40", "end": "14:10", "venue": "Kauppi Sports Center kenttä 3", "city": "Tampere", "host": "Classic Sininen", "home": false, "sections": [["LeKi", [["11:40", "LeKi", "Pirkat Sininen"], ["12:20", "LeKi", "Classic Sininen"], ["13:40", "LeKi", "Y-Ilves Punainen"]]]]}, {"date": "2026-11-14", "start": "09:40", "end": "13:10", "venue": "Ylöjärven liikuntakeskus kenttä 1", "city": "Ylöjärvi", "host": "Pirkat Sininen", "home": false, "sections": [["LeKi", [["10:40", "Classic Pinkki", "LeKi"], ["11:20", "LeKi", "Y-Ilves Punainen"], ["12:40", "LeKi", "Y-Ilves Valkoinen"]]]]}, {"date": "2026-12-19", "start": "14:45", "end": "18:15", "venue": "Siltatien liikuntahalli", "city": "Ylöjärvi", "host": "Y-Ilves Punainen", "home": false, "sections": [["LeKi", [["15:45", "Classic Pinkki", "LeKi"], ["16:25", "LeKi", "Pirkat Sininen"], ["17:45", "Y-Ilves Valkoinen", "LeKi"]]]]}], "talkoot": [{"date": "2026-10-18", "start": "10:00", "end": "16:00", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi", "home": true, "sections": [["LeKi", [["10:00", "LeKi", "Classic Sininen"], ["10:40", "Classic Sininen", "Y-Ilves Valkoinen"], ["11:20", "Pirkat Sininen", "Y-Ilves Valkoinen"], ["12:00", "Classic Sininen", "Pirkat Sininen"], ["12:40", "Classic Pinkki", "Y-Ilves Valkoinen"], ["13:20", "LeKi", "Y-Ilves Punainen"], ["14:00", "NoPS Keltainen", "Classic Pinkki"], ["14:40", "Pirkat Sininen", "Y-Ilves Punainen"], ["15:20", "NoPS Keltainen", "Y-Ilves Punainen"], ["16:00", "LeKi", "NoPS Keltainen"]]]]}]}, {"id": "u11t", "label": "LeKi U11 Tytöt", "cat": "U11 TYTÖT SS", "url": "https://tulospalvelu.salibandy.fi/category/955!sb2026ss/group/1/fixtures", "games": [{"date": "2026-10-10", "start": "09:00", "end": "17:00", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi Sininen", "home": true, "sections": [["LeKi Sininen", [["10:00", "LeKi Sininen", "Classic Pinkki"], ["11:20", "Y-Ilves", "LeKi Sininen"]]], ["LeKi Valkoinen", [["13:20", "Y-Ilves", "LeKi Valkoinen"], ["14:40", "LeKi Valkoinen", "Häme Stars"], ["16:00", "SBT PaPo", "LeKi Valkoinen"]]]]}, {"date": "2026-10-24", "start": "09:40", "end": "16:20", "venue": "Koskenmäen koulu Nokia", "city": "Nokia", "host": "NoPS Keltainen", "home": false, "sections": [["LeKi Sininen", [["10:40", "LeKi Sininen", "Häme Stars"], ["11:20", "LeKi Sininen", "Classic Pinkki"], ["14:00", "SBT PaPo", "LeKi Sininen"]]], ["LeKi Valkoinen", [["14:40", "Y-Ilves", "LeKi Valkoinen"], ["15:20", "SBT PaPo", "LeKi Valkoinen"]]]]}, {"date": "2026-11-22", "start": "10:00", "end": "14:40", "venue": "Koulu- ja kulttuurikampus KAARNA", "city": "Parkano", "host": "SBT PaPo", "home": false, "sections": [["LeKi Sininen", [["11:40", "LeKi Sininen", "Y-Ilves"], ["13:00", "LeKi Sininen", "NoPS Keltainen"], ["13:40", "LeKi Sininen", "Häme Stars"]]], ["LeKi Valkoinen", [["11:00", "LeKi Valkoinen", "NoPS Keltainen"], ["11:40", "LeKi Valkoinen", "Häme Stars"], ["13:00", "Classic Pinkki", "LeKi Valkoinen"]]]]}, {"date": "2026-12-05", "start": "10:00", "end": "14:40", "venue": "Spiral-halli Tampere kenttä 2", "city": "Tampere", "host": "Classic Pinkki", "home": false, "sections": [["LeKi Sininen", [["11:40", "LeKi Sininen", "NoPS Keltainen"], ["12:20", "LeKi Sininen", "SBT PaPo"], ["13:40", "Häme Stars", "LeKi Sininen"]]], ["LeKi Valkoinen", [["11:00", "LeKi Valkoinen", "NoPS Keltainen"], ["12:20", "LeKi Valkoinen", "Y-Ilves"], ["13:00", "LeKi Valkoinen", "SBT PaPo"]]]]}], "talkoot": [{"date": "2026-10-10", "start": "10:00", "end": "16:00", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi Sininen", "home": true, "sections": [["LeKi Sininen", [["10:00", "LeKi Sininen", "Classic Pinkki"], ["10:40", "NoPS Keltainen", "Classic Pinkki"], ["11:20", "Y-Ilves", "LeKi Sininen"], ["12:00", "Y-Ilves", "NoPS Keltainen"], ["12:40", "Häme Stars", "Classic Pinkki"], ["13:20", "Y-Ilves", "LeKi Valkoinen"], ["14:00", "SBT PaPo", "NoPS Keltainen"], ["14:40", "LeKi Valkoinen", "Häme Stars"], ["15:20", "SBT PaPo", "Häme Stars"], ["16:00", "SBT PaPo", "LeKi Valkoinen"]]]]}]}, {"id": "u13hp", "label": "LeKi U13H Pojat", "cat": "U13 POJAT VALKOINEN B SS", "url": "https://tulospalvelu.salibandy.fi/category/2363!sb2026ss/group/1/fixtures", "games": [{"date": "2026-10-04", "start": "10:00", "end": "15:00", "venue": "Spiral-halli Tampere kenttä 2", "city": "Tampere", "host": "Classic Sininen", "home": false, "sections": [["LeKi Valkoinen", [["11:00", "LeKi Valkoinen", "Classic Valkoinen"], ["14:00", "Pirkat Red", "LeKi Valkoinen"]]]]}, {"date": "2026-10-18", "start": "11:00", "end": "15:00", "venue": "Kauppi Sports Center kenttä 3", "city": "Tampere", "host": "Classic Valkoinen", "home": false, "sections": [["LeKi Valkoinen", [["12:00", "KOOVEE Keltaiset", "LeKi Valkoinen"], ["14:00", "LeKi Valkoinen", "WFT"]]]]}, {"date": "2026-11-14", "start": "09:00", "end": "17:00", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi Valkoinen", "home": true, "sections": [["LeKi Valkoinen", [["10:00", "LeKi Valkoinen", "Classic Valkoinen"], ["16:00", "SCU Valkoinen", "LeKi Valkoinen"]]]]}, {"date": "2026-12-20", "start": "10:00", "end": "15:00", "venue": "Sorrilan koulun liikuntahalli", "city": "Valkeakoski", "host": "WFT", "home": false, "sections": [["LeKi Valkoinen", [["11:00", "KOOVEE Keltaiset", "LeKi Valkoinen"], ["14:00", "LeKi Valkoinen", "FoSu Sininen"]]]]}, {"date": "2027-01-16", "start": "09:00", "end": "13:00", "venue": "Harjuniityn liikuntahalli", "city": "Nokia", "host": "NoPS Musta", "home": false, "sections": [["LeKi Valkoinen", [["10:00", "NoPS Musta", "LeKi Valkoinen"], ["12:00", "LeKi Valkoinen", "NoPS Keltainen"]]]]}, {"date": "2027-01-30", "start": "13:00", "end": "17:00", "venue": "Iittala-halli", "city": "Hämeenlinna", "host": "KalvKe", "home": false, "sections": [["LeKi Valkoinen", [["14:00", "RSS Panthers Red", "LeKi Valkoinen"], ["16:00", "LeKi Valkoinen", "KalvKe"]]]]}, {"date": "2027-02-13", "start": "09:00", "end": "17:00", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi Valkoinen", "home": true, "sections": [["LeKi Valkoinen", [["10:00", "LeKi Valkoinen", "Classic Sininen"], ["16:00", "Loiske", "LeKi Valkoinen"]]]]}, {"date": "2027-03-14", "start": "10:00", "end": "14:00", "venue": "Pirkkalan vapaa-aikakeskus", "city": "Pirkkala", "host": "Pirkat Red", "home": false, "sections": [["LeKi Valkoinen", [["11:00", "Pirkat Red", "LeKi Valkoinen"], ["13:00", "LeKi Valkoinen", "Classic Sininen"]]]]}, {"date": "2027-04-03", "start": "10:00", "end": "14:00", "venue": "Harjuniityn liikuntahalli", "city": "Nokia", "host": "NoPS Keltainen", "home": false, "sections": [["LeKi Valkoinen", [["11:00", "FoSu Sininen", "LeKi Valkoinen"], ["13:00", "LeKi Valkoinen", "RSS Panthers Red"]]]]}], "talkoot": [{"date": "2026-11-14", "start": "10:00", "end": "16:00", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi Valkoinen", "home": true, "sections": [["LeKi Valkoinen", [["10:00", "LeKi Valkoinen", "Classic Valkoinen"], ["11:00", "Pirkat Red", "KOOVEE Keltaiset"], ["12:00", "Classic Valkoinen", "KalvKe"], ["13:00", "Classic Sininen", "Pirkat Red"], ["14:00", "KOOVEE Keltaiset", "SCU Valkoinen"], ["15:00", "KalvKe", "Classic Sininen"], ["16:00", "SCU Valkoinen", "LeKi Valkoinen"]]]]}, {"date": "2027-02-13", "start": "10:00", "end": "16:00", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi Valkoinen", "home": true, "sections": [["LeKi Valkoinen", [["10:00", "LeKi Valkoinen", "Classic Sininen"], ["11:00", "Classic Valkoinen", "NoPS Musta"], ["12:00", "Classic Sininen", "NoPS Keltainen"], ["13:00", "KOOVEE Keltaiset", "Classic Valkoinen"], ["14:00", "NoPS Musta", "Loiske"], ["15:00", "NoPS Keltainen", "KOOVEE Keltaiset"], ["16:00", "Loiske", "LeKi Valkoinen"]]]]}]}, {"id": "u13kp", "label": "LeKi U13K Pojat", "cat": "U13 POJAT SININEN A/B SS", "url": "https://tulospalvelu.salibandy.fi/category/445!sb2026ss/group/1/fixtures", "games": [{"date": "2026-10-03", "start": "09:00", "end": "17:00", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi Sininen", "home": true, "sections": [["LeKi Sininen", [["10:00", "LeKi Sininen", "Steelers Pantterit"], ["16:00", "Leppä Punainen", "LeKi Sininen"]]]]}, {"date": "2026-10-18", "start": "09:00", "end": "13:30", "venue": "Spiral-halli Tampere kenttä 3", "city": "Tampere", "host": "Tampereen Icehearts", "home": false, "sections": [["LeKi Sininen", [["10:00", "Tampereen Icehearts", "LeKi Sininen"], ["12:30", "LeKi Sininen", "KOOVEE Punaiset"]]]]}, {"date": "2026-11-28", "start": "12:00", "end": "16:00", "venue": "Janakkalan liikuntahalli", "city": "Turenki", "host": "SCU Sininen", "home": false, "sections": [["LeKi Sininen", [["13:00", "LeKi Sininen", "Pirkat Blue"], ["15:00", "O2JKL Oranssi", "LeKi Sininen"]]]]}, {"date": "2026-12-20", "start": "09:00", "end": "18:00", "venue": "Lempäälä Areena kenttä 1", "city": "Lempäälä", "host": "LeKi Sininen", "home": true, "sections": [["LeKi Sininen", [["10:00", "LeKi Sininen", "SCU Sininen"], ["17:00", "Leppä Punainen", "LeKi Sininen"]]]]}, {"date": "2027-01-16", "start": "10:00", "end": "13:30", "venue": "Pirkkalan vapaa-aikakeskus", "city": "Pirkkala", "host": "Pirkat Blue U12", "home": false, "sections": [["LeKi Sininen", [["11:00", "LeKi Sininen", "Tampereen Icehearts"], ["12:30", "KOOVEE Punaiset", "LeKi Sininen"]]]]}, {"date": "2027-01-30", "start": "10:00", "end": "14:00", "venue": "Pirkkalan vapaa-aikakeskus", "city": "Pirkkala", "host": "Pirkat Blue", "home": false, "sections": [["LeKi Sininen", [["11:00", "LeKi Sininen", "Classic Punainen"], ["13:00", "Classic Sininen", "LeKi Sininen"]]]]}, {"date": "2027-02-14", "start": "09:00", "end": "14:30", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi Sininen", "home": true, "sections": [["LeKi Sininen", [["10:00", "LeKi Sininen", "Pirkat Blue U12"], ["13:30", "Tampereen Icehearts", "LeKi Sininen"]]]]}], "talkoot": [{"date": "2026-10-03", "start": "10:00", "end": "16:00", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi Sininen", "home": true, "sections": [["LeKi Sininen", [["10:00", "LeKi Sininen", "Steelers Pantterit"], ["11:00", "Tampereen Icehearts", "RSS Panthers Black"], ["12:00", "Steelers Pantterit", "Pirkat Blue U12"], ["13:00", "Pirkat Blue", "Tampereen Icehearts"], ["14:00", "RSS Panthers Black", "Leppä Punainen"], ["15:00", "Pirkat Blue U12", "Pirkat Blue"], ["16:00", "Leppä Punainen", "LeKi Sininen"]]]]}, {"date": "2026-12-20", "start": "10:00", "end": "17:00", "venue": "Lempäälä Areena kenttä 1", "city": "Lempäälä", "host": "LeKi Sininen", "home": true, "sections": [["LeKi Sininen", [["10:00", "LeKi Sininen", "SCU Sininen"], ["11:00", "FoSu Valkoinen", "Classic Punainen"], ["12:00", "SCU Sininen", "Tampereen Icehearts"], ["13:00", "Classic Punainen", "Steelers Pantterit"], ["14:00", "KOOVEE Mustat", "FoSu Valkoinen"], ["15:00", "Tampereen Icehearts", "Leppä Punainen"], ["16:00", "Steelers Pantterit", "KOOVEE Mustat"], ["17:00", "Leppä Punainen", "LeKi Sininen"]]]]}, {"date": "2027-02-14", "start": "10:00", "end": "13:30", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi Sininen", "home": true, "sections": [["LeKi Sininen", [["10:00", "LeKi Sininen", "Pirkat Blue U12"], ["11:00", "KOOVEE Punaiset", "Tampereen Icehearts"], ["12:30", "Pirkat Blue U12", "KOOVEE Punaiset"], ["13:30", "Tampereen Icehearts", "LeKi Sininen"]]]]}]}, {"id": "u14p", "label": "LeKi U14 Pojat", "cat": "U14 POJAT VALKOINEN A/B SS", "url": "https://tulospalvelu.salibandy.fi/category/620!sb2026ss/group/1/fixtures", "games": [{"date": "2026-10-24", "start": "09:00", "end": "13:30", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "Sääksjärven Loiske", "home": false, "sections": [["LeKi", [["10:00", "Sääksjärven Loiske", "LeKi"], ["12:30", "LeKi", "Nokian KrP Valkoinen"]]]]}, {"date": "2026-11-07", "start": "09:00", "end": "13:30", "venue": "Vareliuksen liikuntahalli", "city": "Sastamala", "host": "RoPo", "home": false, "sections": [["LeKi", [["10:00", "RoPo", "LeKi"], ["12:30", "LeKi", "Sääksjärven Loiske"]]]]}, {"date": "2026-11-22", "start": "09:00", "end": "14:30", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi", "home": true, "sections": [["LeKi", [["10:00", "LeKi", "Nokian KrP Valkoinen"], ["13:30", "RoPo", "LeKi"]]]]}], "talkoot": [{"date": "2026-11-22", "start": "10:00", "end": "13:30", "venue": "Lempoisten liikuntahalli", "city": "Lempäälä", "host": "LeKi", "home": true, "sections": [["LeKi", [["10:00", "LeKi", "Nokian KrP Valkoinen"], ["11:00", "Sääksjärven Loiske", "RoPo"], ["12:30", "Nokian KrP Valkoinen", "Sääksjärven Loiske"], ["13:30", "RoPo", "LeKi"]]]]}]}]};
+const KEY = "leki-kalenteri-v1";
+const TODAY = new Date().toISOString().slice(0, 10);
+const DAYS = ["su", "ma", "ti", "ke", "to", "pe", "la"];
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { state = {}; }
+let previewIndex = 0;
+
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+function el(tag, props, ...kids) {
+  const n = document.createElement(tag);
+  Object.assign(n, props || {});
+  for (const k of kids) if (k != null) n.append(k);
+  return n;
+}
+function fdate(iso) { const d = new Date(iso + "T12:00:00"); return `${DAYS[d.getDay()]} ${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`; }
+function nextDay(iso) { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + 1); return d.toISOString().slice(0, 10); }
+function lines(ms) { return ms.map(([h, a, b]) => `${h}  ${a} – ${b}`); }
+// Yksi joukkue: "SARJA · joukkue" + ottelut; useampi (U11 Sininen + Valkoinen): ottelut joukkueittain
+function body(cat, sections) {
+  if (sections.length === 1) return [`${cat} · ${sections[0][0]}`, "", ...lines(sections[0][1])];
+  const out = [cat];
+  for (const [team, ms] of sections) out.push("", team, ...lines(ms));
+  return out;
+}
+function footer(team, t) {
+  return ["", `Järjestäjä: ${t.host}` + (t.home ? " · LeKin kotiturnaus, varaudu talkoisiin" : ""), `Sarjasivu: ${team.url}`];
+}
+// "LeKi U11 Tytöt Sininen" + "LeKi U11 Tytöt Valkoinen" -> "LeKi U11 Tytöt"
+function commonLabel(labels) {
+  const parts = labels.map(l => l.split(" "));
+  const out = [];
+  for (let i = 0; i < parts[0].length && parts.every(p => p[i] === parts[0][i]); i++) out.push(parts[0][i]);
+  return out.join(" ");
+}
+
+function buildEvents() {
+  const games = new Map(), events = [];
+  for (const team of DATA.teams) {
+    const s = state[team.id] || {};
+    const name = (s.name || "").trim();
+    if (s.mode === "games") {
+      for (const t of team.games) {
+        if (t.date < TODAY) continue;
+        // Sama pelaaja kahdessa saman sarjan joukkueessa samana päivänä -> yksi merkintä
+        const key = name ? `${name}|${t.date}|${team.cat}` : `${team.id}|${t.date}`;
+        if (!games.has(key)) games.set(key, { name, date: t.date, parts: [] });
+        games.get(key).parts.push({ team, t });
+      }
+    } else if (s.mode === "talkoot") {
+      for (const t of team.talkoot) {
+        if (t.date < TODAY) continue;
+        const label = team.label.replace(/ (Sininen|Valkoinen)$/, "");
+        const title = `🏠 Talkoot: ${label} kotiturnaus`;
+        if (events.some(e => e.title === title && e.date === t.date)) continue;
+        events.push({ title, date: t.date, allDay: true, home: true, location: `${t.venue}, ${t.city}`,
+          description: [...body(team.cat, t.sections), ...footer(team, t)].join("\n") });
+      }
+    }
+  }
+  for (const g of games.values()) {
+    g.parts.sort((a, b) => a.team.label.localeCompare(b.team.label));
+    const home = g.parts.some(p => p.t.home);
+    const label = g.parts.length > 1 ? commonLabel(g.parts.map(p => p.team.label)) : g.parts[0].team.label;
+    const what = `salibandyturnaus (${home ? "KOTITURNAUS " : ""}${label})`;
+    const title = (home ? "🏠 " : "") + (g.name ? `${g.name}: ${what}` : what[0].toUpperCase() + what.slice(1));
+    const first = g.parts[0];
+    const desc = [...body(first.team.cat, g.parts.flatMap(p => p.t.sections)), ...footer(first.team, first.t)];
+    events.push({ title, date: g.date, allDay: false, home, location: `${first.t.venue}, ${first.t.city}`,
+      start: g.parts.map(p => p.t.start).sort()[0], end: g.parts.map(p => p.t.end).sort().pop(),
+      description: desc.join("\n") });
+  }
+  return events.sort((a, b) => (a.date + (a.start || "00")).localeCompare(b.date + (b.start || "00")));
+}
+
+function googleLink(e) {
+  const d = e.date.replaceAll("-", "");
+  const dates = e.allDay ? `${d}/${nextDay(e.date).replaceAll("-", "")}` : `${d}T${e.start.replace(":", "")}00/${d}T${e.end.replace(":", "")}00`;
+  const q = new URLSearchParams({ action: "TEMPLATE", text: e.title, dates, ctz: "Europe/Helsinki", details: e.description, location: e.location });
+  return "https://calendar.google.com/calendar/render?" + q.toString();
+}
+
+function toCsv(events) {
+  const q = v => `"${String(v).replaceAll('"', '""')}"`;
+  const us = iso => { const [y, m, d] = iso.split("-"); return `${m}/${d}/${y}`; };
+  const t12 = hm => { let [h, m] = hm.split(":").map(Number); const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12; return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")} ${ap}`; };
+  const rows = [["Subject", "Start Date", "Start Time", "End Date", "End Time", "All Day Event", "Description", "Location"]];
+  for (const e of events) rows.push(e.allDay
+    ? [e.title, us(e.date), "", us(e.date), "", "True", e.description, e.location]
+    : [e.title, us(e.date), t12(e.start), us(e.date), t12(e.end), "False", e.description, e.location]);
+  return rows.map(r => r.map(q).join(",")).join("\r\n") + "\r\n";
+}
+
+function renderTeams() {
+  const box = document.getElementById("teams");
+  box.replaceChildren();
+  for (const team of DATA.teams) {
+    const s = state[team.id] || (state[team.id] = { mode: "none", name: "" });
+    const upcoming = team.games.filter(t => t.date >= TODAY);
+    const homes = team.talkoot.filter(t => t.date >= TODAY).length;
+    const seg = el("div", { className: "seg", role: "radiogroup", ariaLabel: team.label });
+    for (const [val, txt] of [["none", "Ei"], ["games", "Pelit"], ["talkoot", "Vain talkoot"]]) {
+      const input = el("input", { type: "radio", name: "mode-" + team.id, id: `mode-${team.id}-${val}`, value: val, checked: s.mode === val });
+      input.addEventListener("change", () => { s.mode = val; save(); previewIndex = 0; renderAll(); });
+      seg.append(el("label", {}, input, el("span", { textContent: txt })));
+    }
+    const card = el("div", { className: "team" + (s.mode !== "none" ? " on" : "") },
+      el("div", { className: "team-head" },
+        el("div", {}, el("b", { textContent: team.label }), el("div", { className: "small muted", textContent: `${upcoming.length} tulevaa turnausta · ${homes} kotiturnausta` })),
+        seg));
+    if (s.mode === "games") {
+      const input = el("input", { type: "text", id: "name-" + team.id, placeholder: "Pelaajan nimi (vapaaehtoinen)", value: s.name || "", autocomplete: "off" });
+      input.addEventListener("input", () => { s.name = input.value; save(); renderOutput(); });
+      card.append(el("div", { className: "name-row" }, el("label", { htmlFor: input.id, className: "small muted", textContent: "Nimi merkintään:" }), input));
+    }
+    box.append(card);
+  }
+}
+
+function renderOutput() {
+  const events = buildEvents();
+  const prev = document.getElementById("preview"), list = document.getElementById("list");
+  document.getElementById("download").disabled = !events.length;
+  document.getElementById("ics").disabled = !events.length;
+  document.getElementById("copy").disabled = !events.length;
+  if (!events.length) {
+    prev.replaceChildren(el("div", { className: "empty", textContent: "Valitse vähintään yksi joukkue, niin esimerkkimerkintä näkyy tässä." }));
+    list.replaceChildren(el("div", { className: "empty", textContent: "Ei merkintöjä vielä." }));
+    return;
+  }
+  previewIndex = Math.min(previewIndex, events.length - 1);
+  const e = events[previewIndex];
+  const when = e.allDay ? `${fdate(e.date)} · koko päivä` : `${fdate(e.date)} klo ${e.start.replace(":", ".")}–${e.end.replace(":", ".")}`;
+  const back = el("button", { type: "button", textContent: "← Edellinen", disabled: previewIndex === 0 });
+  const fwd = el("button", { type: "button", textContent: "Seuraava →", disabled: previewIndex >= events.length - 1 });
+  back.onclick = () => { previewIndex--; renderOutput(); };
+  fwd.onclick = () => { previewIndex++; renderOutput(); };
+  prev.replaceChildren(
+    el("div", { className: "preview" },
+      el("div", { className: "bar" + (e.home ? " home" : "") },
+        el("div", { className: "title", textContent: e.title }),
+        el("div", { className: "small", textContent: when }),
+        el("div", { className: "small muted", textContent: e.location })),
+      el("pre", { textContent: e.description })),
+    el("div", { className: "pager", style: "margin-top:10px" }, back, fwd,
+      el("span", { className: "small muted", textContent: `Merkintä ${previewIndex + 1} / ${events.length}` })));
+  list.replaceChildren(el("ul", { className: "list" }, ...events.map(ev =>
+    el("li", {},
+      el("span", { className: "d", textContent: fdate(ev.date) }),
+      el("span", { className: "t", textContent: ev.title }),
+      el("a", { href: googleLink(ev), target: "_blank", rel: "noopener", textContent: "Lisää Google-kalenteriin" })))));
+}
+
+function renderAll() { renderTeams(); renderOutput(); }
+
+document.getElementById("updated").textContent = fdate(DATA.updated);
+renderAll();
+
+// Erillisenä html-tiedostona selain tekee .ics-tiedoston itse; artifactissa sallittu muoto on CSV
+const STANDALONE = !(window.claude && window.claude.use);
+document.getElementById(STANDALONE ? "ics" : "download").hidden = false;
+document.getElementById(STANDALONE ? "help-ics" : "help-csv").hidden = false;
+
+function toIcs(events) {
+  const esc = v => String(v).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+  const enc = new TextEncoder();
+  // RFC 5545: rivit enintään 75 tavua, jatkorivi alkaa välilyönnillä
+  const fold = line => {
+    const out = []; let cur = "";
+    for (const ch of line) {
+      if (enc.encode(cur + ch).length > (out.length ? 74 : 75)) { out.push(cur); cur = ""; }
+      cur += ch;
+    }
+    out.push(cur);
+    return out.join("\r\n ");
+  };
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15) + "Z";
+  const L = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//LeKi salibandy//Turnaukset//FI", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+    "BEGIN:VTIMEZONE", "TZID:Europe/Helsinki",
+    "BEGIN:STANDARD", "DTSTART:19701025T040000", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU", "TZOFFSETFROM:+0300", "TZOFFSETTO:+0200", "TZNAME:EET", "END:STANDARD",
+    "BEGIN:DAYLIGHT", "DTSTART:19700329T030000", "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU", "TZOFFSETFROM:+0200", "TZOFFSETTO:+0300", "TZNAME:EEST", "END:DAYLIGHT",
+    "END:VTIMEZONE"];
+  for (const e of events) {
+    const d = e.date.replaceAll("-", "");
+    const uid = `${d}-${[...e.title].reduce((h, c) => (h * 31 + c.codePointAt(0)) >>> 0, 7).toString(36)}@leki-salibandy`;
+    L.push("BEGIN:VEVENT", `UID:${uid}`, `DTSTAMP:${stamp}`);
+    if (e.allDay) L.push(`DTSTART;VALUE=DATE:${d}`, `DTEND;VALUE=DATE:${nextDay(e.date).replaceAll("-", "")}`);
+    else L.push(`DTSTART;TZID=Europe/Helsinki:${d}T${e.start.replace(":", "")}00`, `DTEND;TZID=Europe/Helsinki:${d}T${e.end.replace(":", "")}00`);
+    L.push(`SUMMARY:${esc(e.title)}`, `LOCATION:${esc(e.location)}`, `DESCRIPTION:${esc(e.description)}`,
+      "BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${esc(e.title)}`, `TRIGGER:${e.allDay ? "-PT8H" : "-PT60M"}`, "END:VALARM", "END:VEVENT");
+  }
+  L.push("END:VCALENDAR");
+  return L.map(fold).join("\r\n") + "\r\n";
+}
+
+document.getElementById("ics").addEventListener("click", () => {
+  const ics = toIcs(buildEvents());
+  const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (iOS) {
+    // Safari avaa text/calendar-sisällön suoraan "Lisää kaikki" -näkymään
+    location.href = "data:text/calendar;charset=utf-8," + encodeURIComponent(ics);
+  } else {
+    const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
+    const a = el("a", { href: url, download: "leki-turnaukset.ics" });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+  status.textContent = "Kalenteritiedosto avattu. Hyväksy merkinnät kalenterissa.";
+});
+
+let downloads = null;
+const status = document.getElementById("status");
+window.claude?.use?.("downloads").then(d => {
+  downloads = d;
+  if (!d) { document.getElementById("download").hidden = true; document.getElementById("copy").hidden = false; }
+}).catch(() => {});
+document.getElementById("download").addEventListener("click", async () => {
+  const csv = toCsv(buildEvents());
+  if (!downloads) { status.textContent = "Lataus ei ole käytettävissä tässä näkymässä. Käytä kopiointia."; document.getElementById("copy").hidden = false; return; }
+  try {
+    await downloads.save({ filename: "leki-turnaukset.csv", data: csv });
+    status.textContent = "Tiedosto tallennettu. Tuo se kalenteriin ohjeen mukaan.";
+  } catch (err) {
+    status.textContent = err && err.code === "declined" ? "Lataus peruttiin." : "Lataus ei onnistunut. Kokeile kopiointia.";
+    document.getElementById("copy").hidden = false;
+  }
+});
+document.getElementById("copy").addEventListener("click", () => {
+  const csv = toCsv(buildEvents());
+  navigator.clipboard.writeText(csv).then(
+    () => { status.textContent = "CSV kopioitu. Liitä se tekstieditoriin ja tallenna .csv-tiedostoksi."; },
+    () => { status.textContent = "Kopiointi estettiin tässä näkymässä."; });
+});
+</script>
+</body>
+</html>
