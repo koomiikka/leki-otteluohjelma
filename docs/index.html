@@ -10,16 +10,16 @@
 /* Layout: neljä vaihetta allekkain (valitse, turnaukset taulukkona, lisää kaikki, esimerkki); kapea yksi palsta */
 :root {
   --bg: #f3f6fa; --surface: #ffffff; --fg: #14213a; --muted: #5b6780; --line: #d9e0ea;
-  --accent: #1447a8; --accent-fg: #ffffff; --home: #c2410c; --home-bg: #fdebe1; --soft: #e8eef8;
+  --accent: #1447a8; --accent-fg: #ffffff; --home: #2f7d6d; --home-bg: #eaf4f1; --soft: #e8eef8;
   --display: "Saira Condensed", "Arial Narrow", sans-serif;
   --body: "IBM Plex Sans", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0e1522; --surface: #162033; --fg: #e6ecf5; --muted: #95a3bb; --line: #26324a;
-  --accent: #7aa7ff; --accent-fg: #0e1522; --home: #fb923c; --home-bg: #3a2416; --soft: #1c2940; color-scheme: dark } }
+  --accent: #7aa7ff; --accent-fg: #0e1522; --home: #6cc3b0; --home-bg: #17302b; --soft: #1c2940; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0e1522; --surface: #162033; --fg: #e6ecf5; --muted: #95a3bb; --line: #26324a;
-  --accent: #7aa7ff; --accent-fg: #0e1522; --home: #fb923c; --home-bg: #3a2416; --soft: #1c2940; color-scheme: dark }
+  --accent: #7aa7ff; --accent-fg: #0e1522; --home: #6cc3b0; --home-bg: #17302b; --soft: #1c2940; color-scheme: dark }
 body { background: var(--bg); color: var(--fg); font: 15px/1.5 var(--body); }
 .wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 64px; display: grid; gap: 32px; }
 h1, h2 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap: balance; text-transform: uppercase; }
@@ -34,6 +34,7 @@ section { display: grid; gap: 14px; }
 .team { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 10px; }
 .team.on { border-color: var(--accent); }
 .team-head { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: space-between; align-items: center; }
+.team a.series { color: var(--accent); font-size: .85rem; font-weight: 600; justify-self: start; overflow-wrap: anywhere; }
 .team-head b { font-size: 1.05rem; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
 .seg label { position: relative; }
@@ -96,12 +97,12 @@ details ol { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 4px; }
 
   <section aria-labelledby="h-teams">
     <h2 id="h-teams"><span class="step">1</span> Valitse joukkueet</h2>
-    <p class="small muted"><b>Pelit</b> = joukkueen turnaukset, paikalla tunti ennen ensimmäistä ottelua (U10 puoli tuntia viimeisen ottelun alun jälkeen, muut tunnin). <b>Vain talkoot</b> = pelkät LeKin kotiturnauspäivät koko päivän merkintöinä.</p>
     <div class="teams" id="teams"></div>
   </section>
 
   <section aria-labelledby="h-list">
     <h2 id="h-list"><span class="step">2</span> Turnaukset</h2>
+    <p class="small muted"><b>Pelit</b> = joukkueen turnaukset, paikalla tunti ennen ensimmäistä ottelua ja tunti viimeisen ottelun alkamisesta eteenpäin (U10 puoli tuntia). <b>Kotiturnaukset</b> = LeKin järjestämät turnauspäivät koko päivän merkintöinä talkoita varten.</p>
     <div id="list"></div>
   </section>
 
@@ -245,7 +246,7 @@ function renderTeams() {
     const upcoming = team.games.filter(t => t.date >= TODAY);
     const homes = team.talkoot.filter(t => t.date >= TODAY).length;
     const seg = el("div", { className: "seg", role: "radiogroup", ariaLabel: team.label });
-    for (const [val, txt] of [["none", "Ei"], ["games", "Pelit"], ["talkoot", "Vain talkoot"]]) {
+    for (const [val, txt] of [["none", "Ei"], ["games", "Pelit"], ["talkoot", "Kotiturnaukset"]]) {
       const input = el("input", { type: "radio", name: "mode-" + team.id, id: `mode-${team.id}-${val}`, value: val, checked: s.mode === val });
       input.addEventListener("change", () => { s.mode = val; save(); previewIndex = 0; renderAll(); });
       seg.append(el("label", {}, input, el("span", { textContent: txt })));
@@ -259,6 +260,7 @@ function renderTeams() {
       input.addEventListener("input", () => { s.name = input.value; save(); renderOutput(); });
       card.append(el("div", { className: "name-row" }, el("label", { htmlFor: input.id, className: "small muted", textContent: "Nimi merkintään:" }), input));
     }
+    if (s.mode !== "none") card.append(el("a", { className: "series", href: team.url, target: "_blank", rel: "noopener", textContent: `${team.cat} – sarjasivu tulospalvelussa ↗` }));
     box.append(card);
   }
 }
